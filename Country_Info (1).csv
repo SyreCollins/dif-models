@@ -1,0 +1,26 @@
+﻿Name,Country,Parameter,Value
+Saudi Arabia,SAU,Tax_Corps,20.0%
+Canada,CAN,Tax_Corps,26.5%
+United States,USA,Tax_Corps,21.0%
+Nigeria,NGA,Tax_Corps,30.0%
+China,CHN,Tax_Corps,25.0%
+Saudi Arabia,SAU,Tax_Goods,15.0%
+Canada,CAN,Tax_Goods,5.0%
+United States,USA,Tax_Goods,0.0%
+Nigeria,NGA,Tax_Goods,7.5%
+China,CHN,Tax_Goods,13.0%
+Saudi Arabia,SAU,CCA,100.0%
+Canada,CAN,CCA,100.0%
+United States,USA,CCA,100.0%
+Nigeria,NGA,CCA,100.0%
+China,CHN,CCA,100.0%
+Saudi Arabia,SAU,Interest_rate,5.0%
+Canada,CAN,Interest_rate,3.3%
+United States,USA,Interest_rate,4.5%
+Nigeria,NGA,Interest_rate,27.5%
+China,CHN,Interest_rate,3.1%
+Saudi Arabia,SAU,Inflatn_rate,1.90%
+Canada,CAN,Inflatn_rate,1.80%
+United States,USA,Inflatn_rate,2.90%
+Nigeria,NGA,Inflatn_rate,34.80%
+China,CHN,Inflatn_rate,0.10%
