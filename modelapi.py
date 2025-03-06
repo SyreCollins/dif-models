@@ -305,24 +305,36 @@ def run_full_model(input_data):
 #############################################
 # Pydantic Model for Query Parameters (following the text file format)
 #############################################
-class RunModelQuery(BaseModel):
-  plant_modes: List[str] = Query(..., description="e.g., [\"Green\", \"Brown\"]")
-  plant_sizes: List[str] = Query(..., description="e.g., [\"Large\", \"Small\"]")
-  plant_effys: List[str] = Query(..., description="e.g., [\"High\", \"Low\"]")
-  fund_modes: List[str] = Query(..., description="e.g., [\"Debt\", \"Equity\", \"Mixed\"]")
-  opex_modes: List[str] = Query(..., description="e.g., [\"Inflated\", \"Constant\"]")
-  locations: List[str] = Query(..., description="e.g., [\"USA\", \"CAN\", \"SAU\", \"CHN\", \"NGA\"]")
-  products: List[str] = Query(..., description="e.g., [\"Methanol\", \"Ammonia\", \"Ethylene\", \"Propylene\"]")
-  carbon_values: List[str] = Query(..., description="e.g., [\"Yes\", \"No\"]")
+# We'll use a helper class to mimic our previous RunModelQuery model:
+class Bunch:
+    def __init__(self, adict):
+        self.__dict__.update(adict)
 
-
-#############################################
-# GET API Endpoint (following the text file format)
-#############################################
 @app.get("/run_model")
-def api_run_model(query: RunModelQuery = Depends()):
-  try:
-    result = run_full_model(query)
-    return {"result": result}
-  except Exception as e:
-    raise HTTPException(status_code=500, detail=str(e))
+def api_run_model(
+    plant_modes: List[str] = Query(..., description="e.g., [Green, Brown]"),
+    plant_sizes: List[str] = Query(..., description="e.g., [Large, Small]"),
+    plant_effys: List[str] = Query(..., description="e.g., [High, Low]"),
+    fund_modes: List[str] = Query(..., description="e.g., [Debt, Equity, Mixed]"),
+    opex_modes: List[str] = Query(..., description="e.g., [Inflated, Constant]"),
+    locations: List[str] = Query(..., description="e.g., [USA, CAN, SAU, CHN, NGA]"),
+    products: List[str] = Query(..., description="e.g., [Methanol, Ammonia, Ethylene, Propylene]"),
+    carbon_values: List[str] = Query(..., description="e.g., [Yes, No]")
+):
+    try:
+        # Build a simple object with attributes from the query parameters
+        query_data = {
+            "plant_modes": plant_modes,
+            "plant_sizes": plant_sizes,
+            "plant_effys": plant_effys,
+            "fund_modes": fund_modes,
+            "opex_modes": opex_modes,
+            "locations": locations,
+            "products": products,
+            "carbon_values": carbon_values,
+        }
+        query_obj = Bunch(query_data)
+        result = run_full_model(query_obj)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
