@@ -950,6 +950,7 @@ class RunModelInput(BaseModel):
     product: str
     carbon_value: str
 
+# Corrected run_full_model function
 def run_full_model(input_data: RunModelInput):
     # Load CSV files – update paths as needed.
     project_datas = pd.read_csv("./project_data.csv")
@@ -976,10 +977,7 @@ def run_full_model(input_data: RunModelInput):
     )
     return results.to_dict(orient="records")
 
-
-#############################################
-# GET API Endpoint (Single Value per Parameter)
-#############################################
+# Corrected API endpoint
 @app.get("/run_model")
 def api_run_model(input_data: RunModelInput = Depends()):
     try:
