@@ -15,7 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+##################################################################PROCESS MODEL BEGINS##############################################################################
+
 def ChemProcess_Model(data):
+
   # Energy/Heat content (HHV) of natural gas...GJ/t
   EcNatGas = 53.6
   # CO2 content of natural gas --> kg CO2 per GJ
@@ -24,8 +27,6 @@ def ChemProcess_Model(data):
  
   hEFF = 0.80
   eEFF = 0.50
-
-
   
   construction_prd = 3
   operating_prd = 27
@@ -42,12 +43,14 @@ def ChemProcess_Model(data):
 
  
   feedQ = prodQ / data['Yld']
-  
-  fuelgas = data['feedEcontnt'] * (1 - data['Yld']) * feedQ    
 
+  
+  fuelgas = data['feedEcontnt'] * (1 - data['Yld']) * feedQ     
+
+  
   Rheat = data['Heat_req'] * (prodQ / hEFF)
 
- 
+  
   dHF = Rheat - fuelgas
   netHeat = np.maximum(0, dHF)            
 
@@ -62,6 +65,16 @@ def ChemProcess_Model(data):
 
 
   return prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind
+
+##################################################################PROCESS MODEL ENDS##############################################################################
+
+
+
+
+
+
+
+#####################################################MICROECONOMIC MODEL BEGINS##################################################################################
 
 def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
@@ -93,11 +106,18 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
   OwnerCost = 0.10
 
+
+  
   corpTAX = np.zeros(project_life)
   corpTAX[:] = data['corpTAX']
+
+  
   corpTAX[:construction_prd] = 0
+
+  
   credit = 0.10
 
+  
   feedprice = [0] * project_life
   fuelprice = [0] * project_life
   elecprice = [0] * project_life
@@ -138,7 +158,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
   Yrly_invsmt[0] = yr1_capex * data["CAPEX"]
   Yrly_invsmt[1] = yr2_capex * data["CAPEX"]
   Yrly_invsmt[2] = yr3_capex * data["CAPEX"]
-  Yrly_invsmt[3:] = list(np.array([data["OPEX"]] * (project_life - 3)) + np.array(feedcst[3:]) + np.array(fuelcst[3:]) + np.array(eleccst[3:]) + np.array(CO2cst[3:]))
+  Yrly_invsmt[3:] = data["OPEX"] + feedcst[3:] + fuelcst[3:] + eleccst[3:] + CO2cst[3:]
 
   
   bank_chrg = [0] * project_life
@@ -252,7 +272,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
     #----------------------------------------------------------------------------Brown field
     else:
       bank_chrg = [0] * project_life
-      Yrly_invsmt[:construction_prd] = 0
+      Yrly_invsmt[:construction_prd] = [0] * construction_prd
       Yrly_cost = [sum(x) for x in zip(Yrly_invsmt, bank_chrg)]
 
       for i in range(len(Year)):
@@ -407,10 +427,13 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
       Pco = sum(cshflw2) / sum(dctftr2)
 
 
+
+
+
     #----------------------------------------------------------------------------Brown field
     else:
       bank_chrg = [0] * project_life
-      Yrly_invsmt[:construction_prd] = 0
+      Yrly_invsmt[:construction_prd] = [0] * construction_prd
       Yrly_cost = [sum(x) for x in zip(Yrly_invsmt, bank_chrg)]
 
       for i in range(len(Year)):
@@ -573,7 +596,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
     #----------------------------------------------------------------------------Brown field
     else:
       bank_chrg = [0] * project_life
-      Yrly_invsmt[:construction_prd] = 0
+      Yrly_invsmt[:construction_prd] = [0] * construction_prd
       Yrly_cost = [sum(x) for x in zip(Yrly_invsmt, bank_chrg)]
 
       for i in range(len(Year)):
@@ -634,6 +657,15 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
 
   return Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl
+
+#####################################################MICROECONOMIC MODEL ENDS##################################################################################
+
+
+
+
+
+
+############################################################MACROECONOMIC MODEL BEGINS############################################################################
 
 def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value):
   # This model is based on the multipliers generated in-house using OECD data on national input output tables for various countries
@@ -803,6 +835,14 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
   return GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI
   ####################### Taxation Impacts END ##################
 
+############################################################# MACROECONOMIC MODEL ENDS ############################################################
+
+
+
+
+
+############################################################# ANALYTICS MODEL BEGINS ############################################################
+
 def Analytics_Model(multiplier, project_data, location, product, plant_mode, fund_mode, opex_mode, carbon_value):
 
 
@@ -935,7 +975,19 @@ def Analytics_Model(multiplier, project_data, location, product, plant_mode, fun
   results = pd.concat(results, ignore_index=True)
 
 
+
   return results
+
+
+########################################################INTEGRATED PROJECT ECONOMICS MODEL######################################################################
+# This is a script that integrates and runs all the model functions
+
+
+'''
+The project_data is selected in accordance with two options for each specified attribute as follows:
+Pricing formula or cost mode (Supply cost - sc/Cash cost - cc), Plant size (Big/Small), Plant efficiency (High/Low), Project funding (Debt/Equity), Results mode (Constant_$/Inflated_$)
+'''
+
 
   #############################################
 # INTEGRATED RUN FUNCTION (Wrapper)
@@ -950,13 +1002,16 @@ class RunModelInput(BaseModel):
     product: str
     carbon_value: str
 
-# Corrected run_full_model function
 def run_full_model(input_data: RunModelInput):
     # Load CSV files – update paths as needed.
     project_datas = pd.read_csv("./project_data.csv")
     multipliers = pd.read_csv("./sectorwise_multipliers.csv")
     
     # Use the provided parameters (each is a single value).
+    #------- Unused
+    plant_size = input_data.plant_size
+    plant_effy = input_data.plant_effy
+    #-------
     plant_mode = input_data.plant_mode
     fund_mode = input_data.fund_mode
     opex_mode = input_data.opex_mode
@@ -977,7 +1032,14 @@ def run_full_model(input_data: RunModelInput):
     )
     return results.to_dict(orient="records")
 
-# Corrected API endpoint
+
+#############################################
+# GET API Endpoint (Single Value per Parameter)
+#############################################
+@app.get("/")
+def home():
+  return {"Info": "Use /run_model and pass in the required payload parameters."}
+
 @app.get("/run_model")
 def api_run_model(input_data: RunModelInput = Depends()):
     try:
@@ -985,3 +1047,26 @@ def api_run_model(input_data: RunModelInput = Depends()):
         return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+#----
+#Options to select
+'''plant_modes = ["Green", "Brown"]  #to reflect pricing formula for all-in supply cost or just cash cost basis
+plant_sizes = ["Large", "Small"]
+plant_effys = ["High", "Low"]
+fund_modes = ["Debt", "Equity", "Mixed"]  #types of project financing
+opex_modes = ["Inflated", "Constant"]
+locations = ["USA", "CAN", "SAU", "CHN", "NGA"]
+products = ["Methanol", "Ammonia", "Ethylene", "Propylene"]
+carbon_values = ["Yes", "No"]'''
+
+#results_all=[]
+#for i in range(len(products)):
+  #results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location=locations[2], product=products[i], plant_mode=plant_modes[0], fund_mode=fund_modes[1], opex_mode=opex_modes[0], carbon_value=carbon_values[1])
+  #results_all.append(results)
+
+# Concatenate all results into a single DataFrame
+#results_all = pd.concat(results_all, ignore_index=True)
+
+# Write results to CSV files
+#results_all.to_csv("/content/drive/MyDrive/Colab Notebooks/ipem_2025/results/results_all.csv", index=False)
