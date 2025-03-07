@@ -138,7 +138,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
   Yrly_invsmt[0] = yr1_capex * data["CAPEX"]
   Yrly_invsmt[1] = yr2_capex * data["CAPEX"]
   Yrly_invsmt[2] = yr3_capex * data["CAPEX"]
-  Yrly_invsmt[3:] = list(np.array([data["OPEX"]] * (project_life - 3)) + np.array(feedcst[3:]) + np.array(fuelcst[3:]) + np.array(eleccst[3:]) + np.array(CO2cst[3:])
+  Yrly_invsmt[3:] = list(np.array([data["OPEX"]] * (project_life - 3)) + np.array(feedcst[3:]) + np.array(fuelcst[3:]) + np.array(eleccst[3:]) + np.array(CO2cst[3:]))
 
   
   bank_chrg = [0] * project_life
