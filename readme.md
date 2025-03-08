@@ -1,53 +1,90 @@
-Integrated Project Economics API
-This project exposes a series of endpoints built with FastAPI to run several integrated economic and process models. The API provides endpoints for:
+---
 
-Chemical Process Model (/chemprocess)
-Microeconomic Model (/microeconomic)
-Integrated Analytics Model (/analytics)
-The analytics endpoint integrates data from CSV files (e.g., project_data.csv and sectorwise_multipliers.csv) along with model computations.
+# Integrated Project Economics API
 
-Table of Contents
-Features
-Requirements
-Installation
-Running Locally
-API Usage Examples
-Integrating with WordPress
-Deploying on Render
-Additional Resources
-Features
-FastAPI-based endpoints: Provides RESTful endpoints for running model calculations.
-Flexible Input: Accepts JSON payloads with model parameters.
-CSV Data Integration: Loads project data and sector multipliers for advanced analytics.
-JSON Responses: Returns results as JSON, making it easy to integrate with front-end apps or WordPress sites.
-Requirements
-Python 3.7+
-FastAPI
-Uvicorn
-Pandas, NumPy, and other dependencies (listed in requirements.txt)
-Installation
-Clone the Repository:
+The **Integrated Project Economics API** provides RESTful endpoints to run advanced process and economic models developed in Python. This API is built with [FastAPI](https://fastapi.tiangolo.com/) and includes endpoints for:
+- **Integrated Analytics Model** (`/analytics`)
 
-git clone https://github.com/yourusername/integrated-project-economics-api.git
-cd integrated-project-economics-api
-Install Dependencies:
+It also shows how to integrate the API with a WordPress website and deploy it on [Render](https://render.com).
 
-pip install -r requirements.txt
-Ensure CSV Files are Available:
-Place project_data.csv and sectorwise_multipliers.csv in the same directory as main.py.
+---
 
-Running Locally
-You can run the API locally using Uvicorn:
+## Table of Contents
 
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Running Locally](#running-locally)
+- [API Usage Examples](#api-usage-examples)
+  - [Analytics Endpoint](#analytics-endpoint)
+- [Integrating with WordPress](#integrating-with-wordpress)
+  - [PHP Example](#php-example)
+  - [JavaScript (Fetch API) Example](#javascript-fetch-api-example)
+- [Deploying on Render](#deploying-on-render)
+
+---
+
+## Features
+
+- **RESTful Endpoints** – Easily run each model with simple POST requests.
+- **JSON Payloads** – Accepts JSON data, making it ideal for integration with various front-end frameworks.
+- **CSV Data Integration** – Utilizes local CSV files (`project_data.csv` and `sectorwise_multipliers.csv`) for advanced analytics.
+- **WordPress Integration** – Connect to your WordPress site using PHP or JavaScript.
+- **Deployable on Render** – Quick and hassle-free deployment on Render for scalable hosting.
+
+---
+
+## Requirements
+
+- Python 3.7+
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Uvicorn](https://www.uvicorn.org/)
+- [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/)
+- Other dependencies listed in `requirements.txt`
+
+---
+
+## Installation
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/yourusername/integrated-project-economics-api.git
+   cd integrated-project-economics-api
+   ```
+
+2. **Install Dependencies:**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **CSV Files:**  
+   Ensure that `project_data.csv` and `sectorwise_multipliers.csv` are placed in the same directory as `main.py`.
+
+---
+
+## Running Locally
+
+Start the API locally using Uvicorn:
+
+```bash
 uvicorn main:app --reload
-The API will be accessible at http://127.0.0.1:8000. You can also view the interactive documentation at http://127.0.0.1:8000/docs.
+```
 
-API Usage Examples
-1. Analytics Endpoint
-URL: POST /analytics
+The API will run at [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
-Sample JSON Payload:
+---
 
+## API Usage Examples
+
+### Analytics Endpoint
+
+**URL:** `POST /analytics`
+
+**Sample JSON Payload:**
+
+```json
 {
   "location": "USA",
   "product": "Ethylene",
@@ -56,16 +93,23 @@ Sample JSON Payload:
   "opex_mode": "Inflated",
   "carbon_value": "No"
 }
-You can test these endpoints using tools like Postman or cURL.
+```
 
-Integrating with WordPress
-To connect your WordPress website to this API, you can use WordPress’s HTTP API (using functions such as wp_remote_post()) or JavaScript’s fetch() method.
+You can test these endpoints using Postman or cURL.
 
-Example using PHP in WordPress
-Add the following snippet to your theme’s functions.php or a custom plugin:
+---
 
+## Integrating with WordPress
+
+You can connect your WordPress site to this API using either PHP (server-side) or JavaScript (client-side).
+
+### PHP Example
+
+Add the following snippet to your theme’s `functions.php` or a custom plugin:
+
+```php
 function call_project_economics_api() {
-    $url = 'https://your-api-domain.com/analytics'; // Replace with your deployed API URL
+    $url = 'https://your-api-domain.com/analytics'; // Replace with your API URL
     $body = json_encode(array(
          'location'      => 'USA',
          'product'       => 'Ethylene',
@@ -88,14 +132,15 @@ function call_project_economics_api() {
         return wp_remote_retrieve_body($response);
     }
 }
-You can call this function in your theme template to display API results on your WordPress site.
+```
 
-Example using JavaScript (Fetch API)
-If you prefer a client-side solution, use the following JavaScript code snippet (ensure CORS is enabled on your API):
+You can call this function from your theme template to display API results.
 
-javascript
-Copy
-Edit
+### JavaScript (Fetch API) Example
+
+Ensure CORS is enabled on your API, then add the following script to your WordPress page:
+
+```javascript
 fetch("https://your-api-domain.com/analytics", {
     method: "POST",
     headers: {
@@ -116,27 +161,38 @@ fetch("https://your-api-domain.com/analytics", {
     // Process and display data on your WordPress page
 })
 .catch(error => console.error("Error:", error));
-Deploying on Render
-Render is a cloud platform that makes it easy to deploy web services. Follow these steps to host your API on Render:
+```
 
-Create a Render Account:
-Sign up at Render.
+---
 
-Push Your Code to GitHub:
-Ensure your API code (including main.py and requirements.txt) is pushed to a GitHub repository.
+## Deploying on Render
 
-Create a New Web Service on Render:
+[Render](https://render.com) provides an easy way to deploy web services. Follow these steps:
 
-Go to the Render dashboard and click on New + and then Web Service.
-Connect your GitHub account and select your repository.
-Configure the service:
-Name: Choose an appropriate name.
-Environment: Select Python.
-Build Command:
-pip install -r requirements.txt
-Start Command:
-uvicorn main:app --host 0.0.0.0 --port $PORT
-Render automatically sets the $PORT environment variable for your service.
-Click Create Web Service.
-Deployment:
-Render will build and deploy your API. Once deployed, you will receive a URL (e.g., https://your-service.onrender.com) that you can use in your WordPress integrations or Postman.
+1. **Create a Render Account:**  
+   Sign up at [Render](https://render.com).
+
+2. **Push Your Code to GitHub:**  
+   Ensure your repository contains `main.py`, `requirements.txt`, and your CSV files.
+
+3. **Create a New Web Service on Render:**
+   - Log in to your Render dashboard.
+   - Click **New +** and choose **Web Service**.
+   - Connect your GitHub account and select your repository.
+   - Configure the service:
+     - **Name:** Choose a suitable name.
+     - **Environment:** Select `Python`.
+     - **Build Command:**  
+       ```bash
+       pip install -r requirements.txt
+       ```
+     - **Start Command:**  
+       ```bash
+       uvicorn main:app --host 0.0.0.0 --port $PORT
+       ```
+   - Click **Create Web Service**.
+
+4. **Access Your API:**  
+   Once deployed, Render will provide a URL (e.g., `https://your-service.onrender.com`) to use in your WordPress integrations or API tests.
+
+---
