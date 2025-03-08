@@ -1,108 +1,142 @@
-Economic Model API
-==================
+Integrated Project Economics API
+This project exposes a series of endpoints built with FastAPI to run several integrated economic and process models. The API provides endpoints for:
 
-Description
------------
-This project implements an integrated economic model API using FastAPI. The API aggregates outputs
-from chemical process, microeconomic, and macroeconomic models to provide financial, economic, and
-environmental metrics based on user input parameters. Data is sourced from CSV files (project_data.csv
-and sectorwise_multipliers.csv), and the API is designed for flexibility and integration with other systems,
-including WordPress.
+Chemical Process Model (/chemprocess)
+Microeconomic Model (/microeconomic)
+Integrated Analytics Model (/analytics)
+The analytics endpoint integrates data from CSV files (e.g., project_data.csv and sectorwise_multipliers.csv) along with model computations.
 
-Features:
-- Processes economic and environmental data to compute breakeven prices, cash flows, and more.
-- Provides a single endpoint (/run_model) for executing the integrated model.
-- Uses FastAPI for API routing and Pydantic for data validation.
-
+Table of Contents
+Features
 Requirements
-------------
-- Python 3.8 or higher
-- FastAPI
-- Uvicorn
-- Pandas
-- NumPy
-- Pydantic
-
 Installation
-------------
-1. Clone the repository:
-   git clone <your-repo-url>
-2. Change to the project directory:
-   cd <your-project-directory>
-3. Create a virtual environment:
-   python -m venv venv
-4. Activate the virtual environment:
-   - On Windows: venv\Scripts\activate
-   - On macOS/Linux: source venv/bin/activate
-5. Install the required packages:
-   pip install -r requirements.txt
+Running Locally
+API Usage Examples
+Integrating with WordPress
+Deploying on Render
+Additional Resources
+Features
+FastAPI-based endpoints: Provides RESTful endpoints for running model calculations.
+Flexible Input: Accepts JSON payloads with model parameters.
+CSV Data Integration: Loads project data and sector multipliers for advanced analytics.
+JSON Responses: Returns results as JSON, making it easy to integrate with front-end apps or WordPress sites.
+Requirements
+Python 3.7+
+FastAPI
+Uvicorn
+Pandas, NumPy, and other dependencies (listed in requirements.txt)
+Installation
+Clone the Repository:
+
+git clone https://github.com/yourusername/integrated-project-economics-api.git
+cd integrated-project-economics-api
+Install Dependencies:
+
+pip install -r requirements.txt
+Ensure CSV Files are Available:
+Place project_data.csv and sectorwise_multipliers.csv in the same directory as main.py.
 
 Running Locally
----------------
-1. Ensure that the CSV files (project_data.csv and sectorwise_multipliers.csv) are present in the root directory.
-2. Start the API server with Uvicorn:
-   uvicorn modelapi:app --reload
-3. The API will be available at:
-   http://127.0.0.1:8000
-4. To test the API, you can use a web browser, Postman, or cURL. For example, use the URL below:
-   http://127.0.0.1:8000/run_model?plant_mode=Green&plant_size=Large&plant_effy=High&fund_mode=Debt&opex_mode=Standard&location=USA&product=Ethylene&carbon_value=No
+You can run the API locally using Uvicorn:
 
+uvicorn main:app --reload
+The API will be accessible at http://127.0.0.1:8000. You can also view the interactive documentation at http://127.0.0.1:8000/docs.
+
+API Usage Examples
+1. Analytics Endpoint
+URL: POST /analytics
+
+Sample JSON Payload:
+
+{
+  "location": "USA",
+  "product": "Ethylene",
+  "plant_mode": "Brown",
+  "fund_mode": "Equity",
+  "opex_mode": "Inflated",
+  "carbon_value": "No"
+}
+You can test these endpoints using tools like Postman or cURL.
+
+Integrating with WordPress
+To connect your WordPress website to this API, you can use WordPress’s HTTP API (using functions such as wp_remote_post()) or JavaScript’s fetch() method.
+
+Example using PHP in WordPress
+Add the following snippet to your theme’s functions.php or a custom plugin:
+
+function call_project_economics_api() {
+    $url = 'https://your-api-domain.com/analytics'; // Replace with your deployed API URL
+    $body = json_encode(array(
+         'location'      => 'USA',
+         'product'       => 'Ethylene',
+         'plant_mode'    => 'Brown',
+         'fund_mode'     => 'Equity',
+         'opex_mode'     => 'Inflated',
+         'carbon_value'  => 'No'
+    ));
+
+    $args = array(
+       'body'      => $body,
+       'headers'   => array('Content-Type' => 'application/json'),
+       'timeout'   => 60,
+    );
+
+    $response = wp_remote_post($url, $args);
+    if (is_wp_error($response)) {
+        return 'Error: ' . $response->get_error_message();
+    } else {
+        return wp_remote_retrieve_body($response);
+    }
+}
+You can call this function in your theme template to display API results on your WordPress site.
+
+Example using JavaScript (Fetch API)
+If you prefer a client-side solution, use the following JavaScript code snippet (ensure CORS is enabled on your API):
+
+javascript
+Copy
+Edit
+fetch("https://your-api-domain.com/analytics", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+         location: "USA",
+         product: "Ethylene",
+         plant_mode: "Brown",
+         fund_mode: "Equity",
+         opex_mode: "Inflated",
+         carbon_value: "No"
+    })
+})
+.then(response => response.json())
+.then(data => {
+    console.log(data);
+    // Process and display data on your WordPress page
+})
+.catch(error => console.error("Error:", error));
 Deploying on Render
--------------------
-Render is a cloud hosting platform that simplifies deployment of web services. To host your API on Render:
+Render is a cloud platform that makes it easy to deploy web services. Follow these steps to host your API on Render:
 
-1. **Create a Render Account:**
-   - Sign up at https://render.com if you don’t already have an account.
+Create a Render Account:
+Sign up at Render.
 
-2. **Prepare Your Repository:**
-   - Push your project repository (including modelapi.py, CSV files, and requirements.txt) to a Git provider such as GitHub, GitLab, or Bitbucket.
+Push Your Code to GitHub:
+Ensure your API code (including main.py and requirements.txt) is pushed to a GitHub repository.
 
-3. **Create a New Web Service on Render:**
-   - Log in to your Render dashboard.
-   - Click the "New" button and select "Web Service".
-   - Connect your Git repository to Render.
-   - In the "Environment" section, select the appropriate branch.
-   - Set the **Build Command** to:
-     pip install -r requirements.txt
-   - Set the **Start Command** to:
-     uvicorn modelapi:app --host 0.0.0.0 --port $PORT
-   - Choose your preferred region and plan, then click "Create Web Service".
+Create a New Web Service on Render:
 
-4. **Configure Environment Variables (if needed):**
-   - If your project requires additional environment-specific settings (e.g., API keys, file paths), add these in the Render dashboard under the "Environment" tab.
-
-5. **Deploy and Test:**
-   - Render will automatically build and deploy your application.
-   - Once deployed, your API will be accessible via the URL provided by Render (e.g., https://your-app-name.onrender.com).
-   - Test the deployed API using a URL such as:
-     https://your-app-name.onrender.com/run_model?plant_mode=Green&plant_size=Large&plant_effy=High&fund_mode=Debt&opex_mode=Standard&location=USA&product=Ethylene&carbon_value=No
-
-Using the API on WordPress
---------------------------
-You can integrate the Economic Model API with your WordPress site by making HTTP requests to the API endpoint. There are several ways to do this. Here’s an example using the built-in WordPress HTTP API and a shortcode:
-
-1. **Add the following code to your theme’s functions.php file or a custom plugin:**
-
-   ```php
-   // Function to fetch data from the Economic Model API
-   function get_economic_model_data() {
-       // Replace with your deployed API URL or local URL for testing.
-       $api_url = 'https://your-app-name.onrender.com/run_model?plant_mode=Green&plant_size=Large&plant_effy=High&fund_mode=Debt&opex_mode=Standard&location=USA&product=ProductA&carbon_value=50';
-       
-       $response = wp_remote_get($api_url);
-       if (is_wp_error($response)) {
-           return 'Error fetching data from the Economic Model API.';
-       }
-       
-       $body = wp_remote_retrieve_body($response);
-       $data = json_decode($body, true);
-       
-       // Process the data as needed. For simplicity, we return it as JSON.
-       return '<pre>' . print_r($data, true) . '</pre>';
-   }
-   
-   // Shortcode to display the Economic Model API data
-   function economic_model_shortcode() {
-       return get_economic_model_data();
-   }
-   add_shortcode('economic_model', 'economic_model_shortcode');
+Go to the Render dashboard and click on New + and then Web Service.
+Connect your GitHub account and select your repository.
+Configure the service:
+Name: Choose an appropriate name.
+Environment: Select Python.
+Build Command:
+pip install -r requirements.txt
+Start Command:
+uvicorn main:app --host 0.0.0.0 --port $PORT
+Render automatically sets the $PORT environment variable for your service.
+Click Create Web Service.
+Deployment:
+Render will build and deploy your API. Once deployed, you will receive a URL (e.g., https://your-service.onrender.com) that you can use in your WordPress integrations or Postman.
