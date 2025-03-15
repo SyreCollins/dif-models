@@ -855,8 +855,15 @@ def Analytics_Model(multiplier, project_data, location, product, plant_mode, fun
   Infl = 0.02  # inflation factor
 
   tempNUM = 1000000
+
+  size_mapping = {"Large": 857375.0, "Small": 324250.0}
+  effy_mapping = {"High": 0.80425, "Low": 0.7020}
+
   results=[]
   for index, data in dt.iterrows():
+    # Override "Cap" and "Yld" with the mapped numeric values.
+    data["Cap"] = size_mapping.get(plant_size, data.get("Cap", 1000))
+    data["Yld"] = effy_mapping.get(plant_effys, data.get("Yld", 0.8))
 
     prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data)
     Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value)
@@ -984,9 +991,6 @@ def Analytics_Model(multiplier, project_data, location, product, plant_mode, fun
 
 
 
-
-
-
 ########################################################INTEGRATED PROJECT ECONOMICS MODEL######################################################################
 # This is a script that integrates and runs all the model functions
 
@@ -1038,7 +1042,9 @@ def run_analytics(input: AnalyticsInput):
                                     plant_mode=input.plant_mode,
                                     fund_mode=input.fund_mode,
                                     opex_mode=input.opex_mode,
-                                    carbon_value=input.carbon_value)
+                                    carbon_value=input.carbon_value,
+                                    plant_size=input.plant_size,       # New parameter: e.g. "Large"
+                                    plant_effys=input.plant_effys)
         # Convert DataFrame to JSON-friendly format
         return result_df.to_dict(orient="records")
     except Exception as e:
