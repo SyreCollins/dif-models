@@ -849,21 +849,20 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
 def Analytics_Model(multiplier, project_data, location, product, plant_mode, fund_mode, opex_mode, carbon_value, plant_size, plant_effys):
 
 
-  dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product)]
+  dt = project_data[
+        (project_data['Country'] == location) &
+        (project_data['Main_Prod'] == product) &
+        (project_data['Plant_Effy'] == plant_effys) &
+        (project_data['Plant_Size'] == plant_size)
+    ]
 
 
   Infl = 0.02  # inflation factor
 
   tempNUM = 1000000
 
-  size_mapping = {"Large": 857375.0, "Small": 324250.0}
-  effy_mapping = {"High": 0.80425, "Low": 0.7020}
-
   results=[]
   for index, data in dt.iterrows():
-    # Override "Cap" and "Yld" with the mapped numeric values.
-    data["Cap"] = size_mapping.get(plant_size, data.get("Cap", 1000))
-    data["Yld"] = effy_mapping.get(plant_effys, data.get("Yld", 0.8))
 
     prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data)
     Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value)
