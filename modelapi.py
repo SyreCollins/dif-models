@@ -846,7 +846,7 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
 
 ############################################################# ANALYTICS MODEL BEGINS ############################################################
 
-def Analytics_Model(multiplier, project_data, location, product, plant_mode, fund_mode, opex_mode, carbon_value):
+def Analytics_Model(multiplier, project_data, location, product, plant_mode, fund_mode, opex_mode, carbon_value, plant_size, plant_effys):
 
 
   dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product)]
@@ -1028,6 +1028,8 @@ class AnalyticsInput(BaseModel):
     fund_mode: str
     opex_mode: str
     carbon_value: str
+    plant_size: str
+    plant_effys: str
 
 @app.post("/analytics")
 def run_analytics(input: AnalyticsInput):
