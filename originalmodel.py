@@ -1,3 +1,4 @@
+
 import pandas as pd
 import numpy as np
 
@@ -832,10 +833,10 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
 
 ############################################################# ANALYTICS MODEL BEGINS ############################################################
 
-def Analytics_Model(multiplier, project_data, location, product, plant_mode, fund_mode, opex_mode, carbon_value):
+def Analytics_Model(multiplier, project_data, location, product, plant_effys, plant_size, plant_mode, fund_mode, opex_mode, carbon_value):
 
 
-  dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product)]
+  dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product) & (project_data['Plant_Effy'] == plant_effys) & (project_data['Plant_Size'] == plant_size)]
 
 
   Infl = 0.02  # inflation factor
@@ -933,7 +934,7 @@ def Analytics_Model(multiplier, project_data, location, product, plant_mode, fun
         'Feedstock Input (TPA)': feedQ,
         'Product Output (TPA)': prodQ,
         'Direct GHG Emissions (TPA)': ghg_dir,
-        'Cost Mode': [cost_mode]  * project_life,
+        'Cost Mode': [cost_mode] * project_life,
         'Real cumCash Flow': ccflows,
         'Nominal cumCash Flow': ccflowsk,
         'Constant$ Breakeven Price': Ps,
@@ -958,16 +959,19 @@ def Analytics_Model(multiplier, project_data, location, product, plant_mode, fun
         'pri_directTAX': np.array(pri_directTAX)/tempNUM,
         'pri_bothTAX': np.array(pri_bothTAX)/tempNUM
     })
+    
     results.append(result)
+    
+    # Concatenate all results (if you have multiple runs)
+    results = pd.concat(results, ignore_index=True)
 
+    # Export the final results to a CSV file
+    results.to_csv("model_results.csv", index=False)
 
-  results = pd.concat(results, ignore_index=True)
+    # Download the CSV file
+    #files.download("model_results.csv")
 
-
-
-  return results
-
-
+    return results
 
 
 
@@ -989,17 +993,17 @@ multipliers = pd.read_csv("./sectorwise_multipliers.csv")
 
 
 #Options to select
-plant_modes = ["Green", "Brown"]  #to reflect pricing formula for all-in supply cost or just cash cost basis
-plant_sizes = ["Large", "Small"]
-plant_effys = ["High", "Low"]
-fund_modes = ["Debt", "Equity", "Mixed"]  #types of project financing
-opex_modes = ["Inflated", "Constant"]
-locations = ["USA", "CAN", "SAU", "CHN", "NGA"]
-products = ["Methanol", "Ammonia", "Ethylene", "Propylene"]
-carbon_values = ["Yes", "No"]
+plant_modes = "Green"  #to reflect pricing formula for all-in supply cost or just cash cost basis
+plant_sizes = "Large"
+plant_effys = "High"
+fund_modes = "Equity"  #types of project financing
+opex_modes = "Inflated"
+locations = "USA"
+products = "Ethylene"
+carbon_values = "Yes"
 
 #for i in range(len(products)):
   #results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location=locations[2], product=products[i], plant_mode=plant_modes[0], fund_mode=fund_modes[1], opex_mode=opex_modes[0], carbon_value=carbon_values[1])
-results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="USA", product="Ethylene", plant_mode="Brown", fund_mode="Equity", opex_mode="Inflated", carbon_value="No")
-print(results)
+#results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="CAN", product="Ethylene", plant_effys="High", plant_sizes="Large" plant_mode="Brown", fund_mode="Equity", opex_mode="Inflated", carbon_value="No")
+#print(results)
 
