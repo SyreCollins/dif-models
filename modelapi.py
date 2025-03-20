@@ -1,6 +1,6 @@
 from originalmodel import Analytics_Model
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Any, Dict, List
@@ -42,7 +42,7 @@ def run_analytics(input: AnalyticsInput):
                                     plant_size=input.plant_size,       # New parameter: e.g. "Large"
                                     plant_effys=input.plant_effys)
         # Convert DataFrame to JSON-friendly format
-        return result_df.to_dict(orient="records")
+        return Response(content=result_df.to_json(orient='records'), media_type='application/json') #result_df.to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
