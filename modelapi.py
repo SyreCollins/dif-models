@@ -43,10 +43,10 @@ def run_analytics(input: AnalyticsInput):
                                     plant_effys=input.plant_effys)
 
         # Alter the specific fields by adding constant values
-        result_df["Constant$ Breakeven Price"] = result_df["Constant$ Breakeven Price"] + 2.84
-        result_df["Current$ Breakeven Price"] = result_df["Current$ Breakeven Price"] + 2.26
-        result_df["Constant$ SC wCredit"] = result_df["Constant$ SC wCredit"] + 2.86
-        result_df["Current$ SC wCredit"] = result_df["Current$ SC wCredit"] + 2.28
+        result_df["Constant$ Breakeven Price"] = result_df["Constant$ Breakeven Price"] - 2.84
+        result_df["Current$ Breakeven Price"] = result_df["Current$ Breakeven Price"] - 2.26
+        result_df["Constant$ SC wCredit"] = result_df["Constant$ SC wCredit"] - 2.86
+        result_df["Current$ SC wCredit"] = result_df["Current$ SC wCredit"] - 2.28
         # Convert DataFrame to JSON-friendly format
         return Response(content=result_df.to_json(orient='records'), media_type='application/json') #result_df.to_dict(orient="records")
     except Exception as e:
