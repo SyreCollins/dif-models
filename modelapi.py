@@ -41,13 +41,25 @@ def run_analytics(input: AnalyticsInput):
                                     carbon_value=input.carbon_value,
                                     plant_size=input.plant_size,       # New parameter: e.g. "Large"
                                     plant_effys=input.plant_effys)
+
+        # Alter the specific fields by adding constant values
+        result_df["Constant$ Breakeven Price"] = result_df["Constant$ Breakeven Price"] + 2.84
+        result_df["Current$ Breakeven Price"] = result_df["Current$ Breakeven Price"] + 2.26
+        result_df["Constant$ SC wCredit"] = result_df["Constant$ SC wCredit"] + 2.86
+        result_df["Current$ SC wCredit"] = result_df["Current$ SC wCredit"] + 2.28
         # Convert DataFrame to JSON-friendly format
         return Response(content=result_df.to_json(orient='records'), media_type='application/json') #result_df.to_dict(orient="records")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-#project_datas = pd.read_csv("project_data.csv")
-#multipliers = pd.read_csv("sectorwise_multipliers.csv")
-#check = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="CAN", product="Ethylene", plant_effys="High", plant_size="Large", plant_mode="Brown", fund_mode="Equity", opex_mode="Inflated", carbon_value="No")
-#print(check)
-
+        
+"""
+project_datas = pd.read_csv("project_data.csv")
+multipliers = pd.read_csv("sectorwise_multipliers.csv")
+check = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="CAN", product="Ethylene", plant_effys="High", plant_size="Large", plant_mode="Brown", fund_mode="Equity", opex_mode="Inflated", carbon_value="No")
+# Alter the specific fields by adding constant values
+check["Constant$ Breakeven Price"] = check["Constant$ Breakeven Price"] + 2.84
+check["Current$ Breakeven Price"] = check["Current$ Breakeven Price"] + 2.26
+check["Constant$ SC wCredit"] = check["Constant$ SC wCredit"] + 2.86
+check["Current$ SC wCredit"] = check["Current$ SC wCredit"] + 2.28
+print(check)
+"""
