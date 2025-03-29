@@ -5,7 +5,7 @@ import numpy as np
 
 ##################################################################PROCESS MODEL BEGINS##############################################################################
 
-def ChemProcess_Model(data): #add 5 more optional function requirements
+def ChemProcess_Model(data, construction_prd=3, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95): #add 5 more optional function requirements
 
   # Energy/Heat content (HHV) of natural gas...GJ/t
   EcNatGas = 53.6
@@ -19,14 +19,22 @@ def ChemProcess_Model(data): #add 5 more optional function requirements
 
   
   construction_prd = 3 #add value from payload value
-  operating_prd = 27 #replace with payload value
+  #operating_prd = 27 #replace with payload value
   project_life = construction_prd + operating_prd
 
   
   util_fac = np.zeros(project_life)
-  util_fac[construction_prd] = 0.70 #1st year value replace with payload value
-  util_fac[(construction_prd+1)] = 0.80 #2nd year value replace with payload value
-  util_fac[(construction_prd+2):] = 0.95 #3rd year value replace with payload value
+  # For operating years: assign the first two values, then use the third for all remaining years.
+  if operating_prd >= 1:
+    util_fac[construction_prd] = util_operating_first
+  if operating_prd >= 2:
+    util_fac[construction_prd + 1] = util_operating_second
+  if operating_prd >= 3:
+    util_fac[(construction_prd + 2):] = util_operating_third
+
+  #util_fac[construction_prd] = 0.70 #1st year value replace with payload value
+  #util_fac[(construction_prd+1)] = 0.80 #2nd year value replace with payload value
+  #util_fac[(construction_prd+2):] = 0.95 #3rd year value replace with payload value
 
   
   prodQ = util_fac * data['Cap']
@@ -66,33 +74,33 @@ def ChemProcess_Model(data): #add 5 more optional function requirements
 
 #####################################################MICROECONOMIC MODEL BEGINS##################################################################################
 
-def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
+def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10,CAPEX=None, OPEX=None, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80,util_operating_third=0.95):
 
-  prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data)
+  prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data, operating_prd=operating_prd, util_operating_first=util_operating_first, util_operating_second=util_operating_second, util_operating_third=util_operating_third)
   eEFF = 0.50
 
   
-  Infl = 0.02  #replace with payload value
-  RR = 0.035  #replace with payload value
-  IRR = 0.10 #replace with payload value
+  Infl = infl  #replace with payload value
+  #RR = 0.035  #replace with payload value
+  #IRR = 0.10 #replace with payload value
 
-  """if fund_mode == "Mixed":
-    shrDebt = 'payload value'
+  if fund_mode == "Mixed":
+    shrDebt = shrDebt_value
   elif fund_mode == 'Debt':
     shrDebt = 1
   else:
-    shrDebt = 0 """ #remove triple quote comment when you set payload value
+    shrDebt = 0 #remove triple quote comment when you set payload value
 
-  shrDebt = 0.60
+  #shrDebt = 0.60
   shrEquity = 1 - shrDebt
   wacc = (shrDebt * RR) + (shrEquity * IRR)
 
   
   construction_prd = 3
-  operating_prd = 27 #replace with payload value
+  #operating_prd = 27 #replace with payload value
   project_life = construction_prd + operating_prd
 
-  baseYear = data['Base_Yr'] #replace with payload value
+  baseYear = baseYear if baseYear is not None else data['Base_Yr'] #replace with payload value
   Year = list(range(baseYear, baseYear + project_life))
 
   
@@ -100,26 +108,32 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
   yr2_capex = 0.50
   yr3_capex = 0.30
 
-  OwnerCost = 0.10 #replace with payload value
+  OwnerCost = ownerCost #0.10 replace with payload value
 
 
   
   corpTAX = np.zeros(project_life) #replace with payload value
-  corpTAX[:] = data['corpTAX']
+  if corpTAX_value is not None:
+    corpTAX[:] = corpTAX_value
+  else:
+    corpTAX[:] = data['corpTAX']
 
   
   corpTAX[:construction_prd] = 0
 
   
-  credit = 0.10
+  credit = credit_value #0.10
 
-  
-  feedprice = [0] * project_life #replace with payload value
-  fuelprice = [0] * project_life #replace with payload value
-  elecprice = [0] * project_life #replace with payload value
+  Feed_Price = Feed_Price if Feed_Price is not None else data["Feed_Price"]
+  Fuel_Price = Fuel_Price if Fuel_Price is not None else data["Fuel_Price"]
+  Elect_Price = Elect_Price if Elect_Price is not None else data["Elect_Price"]
+
+  #feedprice = Feed_Price if Feed_Price is not None else [0] * project_life #replace with payload value
+  #fuelprice = Fuel_Price if Fuel_Price is not None else [0] * project_life #replace with payload value
+  #elecprice = Elect_Price if Elect_Price is not None else [0] * project_life #replace with payload value
 
   ##################INFLATED AND UNINFLATED PRICES SCENARIOS BEGINS#########################
-  if opex_mode == "Inflated":
+  """if opex_mode == "Inflated":
     
     for i in range(project_life):
         feedprice[i] = data["Feed_Price"] * ((1 + Infl) ** i)
@@ -129,7 +143,16 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
     feedprice = [data["Feed_Price"]] * project_life
     fuelprice = [data["Fuel_Price"]] * project_life
-    elecprice = [data["Elect_Price"]] * project_life
+    elecprice = [data["Elect_Price"]] * project_life"""
+  # Set up price arrays based on opex mode.
+  if opex_mode == "Inflated":
+    feedprice = [Feed_Price * ((1 + infl) ** i) for i in range(project_life)]
+    fuelprice = [Fuel_Price * ((1 + infl) ** i) for i in range(project_life)]
+    elecprice = [Elect_Price * ((1 + infl) ** i) for i in range(project_life)]
+  else:
+    feedprice = [Feed_Price] * project_life
+    fuelprice = [Fuel_Price] * project_life
+    elecprice = [Elect_Price] * project_life
 
   ##################INFLATED AND UNINFLATED PRICES SCENARIOS ENDS############################
 
@@ -139,7 +162,8 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
   eleccst = eEFF * Relec * elecprice
 
   # CO2 tax calculations
-  CarbonTAX = [data["CO2price"]] * project_life
+  CarbonTAX_value = CarbonTAX_value if CarbonTAX_value is not None else data["CO2price"]
+  CarbonTAX = [CarbonTAX_value] * project_life
 
   
   if carbon_value == "Yes":
@@ -147,16 +171,18 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
   else:
     CO2cst = [0] * project_life
   
-
+  # Use CAPEX and OPEX from payload if provided, else use data
+  CAPEX = CAPEX if CAPEX is not None else data["CAPEX"]
+  OPEX = OPEX if OPEX is not None else data["OPEX"]
   
   Yrly_invsmt = [0] * project_life
 
   #data["CAPEX"] = 'user payload value' #replace with payload value
   
-  Yrly_invsmt[0] = yr1_capex * data["CAPEX"]
-  Yrly_invsmt[1] = yr2_capex * data["CAPEX"]
-  Yrly_invsmt[2] = yr3_capex * data["CAPEX"]
-  Yrly_invsmt[3:] = data["OPEX"] + feedcst[3:] + fuelcst[3:] + eleccst[3:] + CO2cst[3:]
+  Yrly_invsmt[0] = yr1_capex * CAPEX
+  Yrly_invsmt[1] = yr2_capex * CAPEX
+  Yrly_invsmt[2] = yr3_capex * CAPEX
+  Yrly_invsmt[3:] = OPEX + feedcst[3:] + fuelcst[3:] + eleccst[3:] + CO2cst[3:]
 
   
   bank_chrg = [0] * project_life
@@ -202,7 +228,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
               bank_chrg[i] = 0
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -293,7 +319,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
               bank_chrg[i] = 0
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -358,7 +384,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
       NetRevn = [r - y for r, y in zip(Rstark, Yrly_cost)]
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -448,7 +474,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
       NetRevn = [r - y for r, y in zip(Rstark, Yrly_cost)]
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -522,7 +548,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
               bank_chrg[i] = 0
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -617,7 +643,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
               bank_chrg[i] = 0
 
       
-      TIC = data['CAPEX'] + sum(bank_chrg)
+      TIC = CAPEX + sum(bank_chrg)
 
       
       tax_pybl = [0] * project_life  
@@ -650,6 +676,8 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
   return Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl
 
+
+
 #####################################################MICROECONOMIC MODEL ENDS##################################################################################
 
 
@@ -657,16 +685,15 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value):
 
 ############################################################MACROECONOMIC MODEL BEGINS############################################################################
 
-def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value):
+def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value,PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10,CAPEX=None, OPEX=None, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80,util_operating_third=0.95):
   # This model is based on the multipliers generated in-house using OECD data on national input output tables for various countries
 
 
-  
-  PRIcoef = 0.3 #replace with payload value
-  CONcoef = 0.7 #replace with payload value
+  PRIcoef = PRIcoef #replace with payload value
+  CONcoef = CONcoef #replace with payload value
 
-  prodQ, _, _, _, _, _, _ = ChemProcess_Model(data)
-  Ps, _, _, _, _, _, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, _, _ = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value)
+  prodQ, _, _, _, _, _, _ = ChemProcess_Model(data, operating_prd=operating_prd, util_operating_first=util_operating_first, util_operating_second=util_operating_second, util_operating_third=util_operating_third)
+  Ps, _, _, _, _, _, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, _, _ = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value, infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear, ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price, Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value, credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd, util_operating_first=util_operating_first, util_operating_second=util_operating_second, util_operating_third=util_operating_third)
   
   pri_invsmt = [0] * project_life
   con_invsmt = [0] * project_life
@@ -831,7 +858,7 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
 
 ############################################################# ANALYTICS MODEL BEGINS ############################################################
 
-def Analytics_Model(multiplier, project_data, location, product, plant_effys, plant_size, plant_mode, fund_mode, opex_mode, carbon_value):
+def Analytics_Model(multiplier, project_data, location, product, plant_effys, plant_size, plant_mode, fund_mode, opex_mode, carbon_value, operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10, CAPEX=None, OPEX=None,PRIcoef=0.3, CONcoef=0.7,util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95):
 
 
   dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product) & (project_data['Plant_Effy'] == plant_effys) & (project_data['Plant_Size'] == plant_size)]
@@ -843,9 +870,10 @@ def Analytics_Model(multiplier, project_data, location, product, plant_effys, pl
   results=[]
   for index, data in dt.iterrows():
 
-    prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data) #specify process_model, construction_prd, operating_prd
-    Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value)
-    GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI = MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value)
+    prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data, operating_prd=operating_prd, util_operating_first=util_operating_first,util_operating_second=util_operating_second,util_operating_third=util_operating_third) #specify process_model, construction_prd, operating_prd
+    Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value,infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear,ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price,Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value,credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd,util_operating_first=util_operating_first, util_operating_second=util_operating_second,util_operating_third=util_operating_third)
+
+    GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI = MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value,PRIcoef=PRIcoef, CONcoef=CONcoef,infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear,ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price,Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value,credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd,util_operating_first=util_operating_first, util_operating_second=util_operating_second,util_operating_third=util_operating_third)
 
     Yrly_cost = np.array(Yrly_invsmt) + np.array(bank_chrg)
 
@@ -999,9 +1027,29 @@ opex_modes = "Inflated"
 locations = "USA"
 products = "Ethylene"
 carbon_values = "Yes"
+operating_prd=27 
+infl=0.02 
+RR=0.035 
+IRR=0.10 
+shrDebt_value=0.60 
+baseYear=None 
+ownerCost=0.10
+corpTAX_value=None 
+Feed_Price=None 
+Fuel_Price=None 
+Elect_Price=None 
+CarbonTAX_value=None 
+credit_value=0.10 
+CAPEX=None 
+OPEX=None
+PRIcoef=0.3 
+CONcoef=0.7
+util_operating_first=0.70 
+util_operating_second=0.80 
+util_operating_third=0.95
 
 #for i in range(len(products)):
   #results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location=locations[2], product=products[i], plant_mode=plant_modes[0], fund_mode=fund_modes[1], opex_mode=opex_modes[0], carbon_value=carbon_values[1])
-#results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="CAN", product="Ethylene", plant_effys="High", plant_size="Large", plant_mode="Brown", fund_mode="Mixed", opex_mode="Uninflated", carbon_value="No")
+#results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location="CAN", product="Ethylene", plant_effys="High", plant_size="Large", plant_mode="Brown", fund_mode="Mixed", opex_mode="Uninflated", carbon_value="No", operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10, CAPEX=None, OPEX=None,PRIcoef=0.3, CONcoef=0.7,util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95)
 #print(results)
 
