@@ -3,7 +3,7 @@ import pandas as pd
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 app = FastAPI(title="Integrated Project Economics API")
 
