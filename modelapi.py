@@ -35,9 +35,10 @@ class AnalyticsInput(BaseModel):
     IRR: float = 0.10
 
     construction_prd: int = 3
-    yr1_capex: float = 0.20
-    yr2_capex: float = 0.50
-    yr3_capex: float = 0.30
+    capex_spread: List[float] = [0.2, 0.5, 0.3]
+    #yr1_capex: float = 0.20
+    #yr2_capex: float = 0.50
+    #yr3_capex: float = 0.30
 
     shrDebt_value: float = 0.60
     baseYear: Optional[int] = None
@@ -53,6 +54,19 @@ class AnalyticsInput(BaseModel):
     # MacroEconomic parameters:
     PRIcoef: float = 0.3
     CONcoef: float = 0.7
+
+    @classmethod
+    def validate_capex_spread(cls, v, values):
+        cp = values.get("construction_prd", 3)
+        if len(v) != cp:
+            raise ValueError(f"Expected {cp} CAPEX spread values, got {len(v)}")
+        if not abs(sum(v) - 1.0) < 0.01:
+            raise ValueError("CAPEX spread values must sum to 1.0")
+        return v
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate_capex_spread
 
 @app.post("/analytics")
 def run_analytics(input: AnalyticsInput):
@@ -73,9 +87,7 @@ def run_analytics(input: AnalyticsInput):
             carbon_value=input.carbon_value,
             operating_prd=input.operating_prd,
             construction_prd=input.construction_prd,
-            yr1_capex=input.yr1_capex,
-            yr2_capex=input.yr2_capex,
-            yr3_capex=input.yr3_capex,
+            capex_spread=input.capex_spread
             infl=input.infl,
             RR=input.RR,
             IRR=input.IRR,
