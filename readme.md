@@ -1,198 +1,169 @@
----
+################ *OVERVIEW* #################
 
-# Integrated Project Economics API
+- The API exposes the following major functionalities:
 
-The **Integrated Project Economics API** provides RESTful endpoints to run advanced process and economic models developed in Python. This API is built with [FastAPI](https://fastapi.tiangolo.com/) and includes endpoints for:
-- **Integrated Analytics Model** (`/analytics`)
+    > ChemProcess_Model
+    > MicroEconomic_Model: Computes project economics based on various funding scenarios.
+    > MacroEconomic_Model: Estimates macroeconomic impacts using multipliers.
+    > Analytics_Model: Integrates all models to produce a comprehensive analysis and project economics outputs.
+    > Additionally, the `/run_model` endpoint runs the full integrated model, reading input CSV files and generating a complete output.
 
-It also shows how to integrate the API with a WordPress website and deploy it on [Render](https://render.com).
+<Note: Make sure the paths in the code correctly points to the CSV files in the data_inputs folder.
+You can find the complete package list in requirements.txt file.
 
----
 
-## Table of Contents
+- *Install Dependencies:*
+    `pip install -r requirements.txt`
 
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Running Locally](#running-locally)
-- [API Usage Examples](#api-usage-examples)
-  - [Analytics Endpoint](#analytics-endpoint)
-- [Integrating with WordPress](#integrating-with-wordpress)
-  - [PHP Example](#php-example)
-  - [JavaScript (Fetch API) Example](#javascript-fetch-api-example)
-- [Deploying on Render](#deploying-on-render)
+- *Running the API*
+    -You can run the API locally using Uvicorn. In your terminal, execute:
 
----
+        `uvicorn main:app --reload`
+        The --reload flag enables auto-reloading for code changes.
+        The API will be available at http://127.0.0.1:8000.
+        Open your browser and navigate to http://127.0.0.1:8000/docs to view the automatically generated OpenAPI documentation and try out the endpoints interactively.
 
-## Features
+- *Endpoints Overview*
+    - The API includes the following endpoints:
 
-- **RESTful Endpoints** – Easily run each model with simple POST requests.
-- **JSON Payloads** – Accepts JSON data, making it ideal for integration with various front-end frameworks.
-- **CSV Data Integration** – Utilizes local CSV files (`project_data.csv` and `sectorwise_multipliers.csv`) for advanced analytics.
-- **WordPress Integration** – Connect to your WordPress site using PHP or JavaScript.
-- **Deployable on Render** – Quick and hassle-free deployment on Render for scalable hosting.
+        GET `/`
+            Returns a welcome message.
 
----
+        POST `/chemprocess`
+            Calls the ChemProcess_Model function.
+            Input: JSON object with keys matching the chemical process model parameters.
+            Output: Calculated arrays for product output, feed, heat, etc.
 
-## Requirements
+        POST `/microeconomic`
+            Calls the MicroEconomic_Model function.
+            Input: JSON with the model data and parameters such as plant_mode, fund_mode, opex_mode, and carbon_value.
+            Output: Breakeven prices and a timeline (Years array).
 
-- Python 3.7+
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Uvicorn](https://www.uvicorn.org/)
-- [Pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/)
-- Other dependencies listed in `requirements.txt`
+        POST `/macroeconomic`
+            Calls the MacroEconomic_Model function.
+            Input: JSON containing both the data and multiplier parameters, along with location and funding modes.
+            Output: Macroeconomic impact arrays and timeline.
 
----
+        POST /analytics
+            Calls the Analytics_Model function which integrates all models.
+            Input: JSON with parameters like location, product, plant_mode, fund_mode, opex_mode, and carbon_value.
+            Output: A detailed DataFrame of project economics as JSON.
 
-## Installation
+        GET `/run_model`
+            Runs the full integrated model. It reads the required CSV files, processes the models, concatenates results, and returns the complete output as JSON.
 
-1. **Clone the Repository:**
+- *How the API Works*
+    -Model Integration:
+        The code from the original Python script is used in the api code without any changes. Each section (process, microeconomic, macroeconomic, and analytics models) is defined as a function. These functions perform all calculations and transformations using NumPy and Pandas.
 
-   ```bash
-   git clone https://github.com/yourusername/integrated-project-economics-api.git
-   cd integrated-project-economics-api
-   ```
+- *FastAPI Endpoints:*
+    Each endpoint in the FastAPI application calls one of the model functions:
 
-2. **Install Dependencies:**
+    Input data is validated using Pydantic models.
+    The model function is executed with the validated input.
+    The result (often arrays or DataFrames) is returned as JSON. When needed, Pandas DataFrames are converted to dictionaries.
+    *File I/O*:
+        The integrated run (`/run_model` and `/analytics`) reads external CSV files from the data_inputs folder. Ensure that the file paths in the code match your project structure.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+- *Error Handling:*
+    Each endpoint uses a try-except block to catch errors and return an HTTP 500 status with the error message. This helps developers diagnose issues quickly.
 
-3. **CSV Files:**  
-   Ensure that `project_data.csv` and `sectorwise_multipliers.csv` are placed in the same directory as `main.py`.
+- *Calling the API from WordPress*
+    There are several ways to call the API from WordPress. Below are two common approaches:
 
----
+    1. Using WordPress HTTP API (Server-to-Server)
+        You can use the built-in WordPress function wp_remote_post() to call the API from a plugin or theme’s functions.php file.
 
-## Running Locally
+        Example PHP snippet:
+                <?php
+                function call_ipem_api() {
+                    $url = 'http://your-api-domain.com/analytics';
+                    $args = array(
+                        'body'        => json_encode( array(
+                            'location'   => 'SAU',
+                            'product'    => 'Methanol',
+                            'plant_mode' => 'Green',
+                            'fund_mode'  => 'Equity',
+                            'opex_mode'  => 'Inflated',
+                            'carbon_value' => 'No'
+                        )),
+                        'headers'     => array(
+                            'Content-Type' => 'application/json'
+                        ),
+                        'timeout'     => 60
+                    );
+    
+                    $response = wp_remote_post( $url, $args );
+                    if ( is_wp_error( $response ) ) {
+                        return 'Error: ' . $response->get_error_message();
+                    }
+    
+                    $body = wp_remote_retrieve_body( $response );
+                    $result = json_decode( $body, true );
+                    return $result;
+                }
 
-Start the API locally using Uvicorn:
+                // You can hook this function to a shortcode or AJAX action to display results in WordPress.
+                add_shortcode('ipem_api', 'call_ipem_api');
+                ?> """
 
-```bash
-uvicorn main:app --reload
-```
+2. Using AJAX from the Front-End
+If you prefer to call the API from JavaScript (for example, via an AJAX call in a custom theme or plugin), you can use the fetch API or jQuery’s AJAX functions.
 
-The API will run at [http://127.0.0.1:8000](http://127.0.0.1:8000)
-
----
-
-## API Usage Examples
-
-### Analytics Endpoint
-
-**URL:** `POST /analytics`
-
-**Sample JSON Payload:**
-
-```json
-{
-  "location": "USA",
-  "product": "Ethylene",
-  "plant_mode": "Brown",
-  "fund_mode": "Equity",
-  "opex_mode": "Inflated",
-  "carbon_value": "No"
-}
-```
-
-You can test these endpoints using Postman or cURL.
-
----
-
-## Integrating with WordPress
-
-You can connect your WordPress site to this API using either PHP (server-side) or JavaScript (client-side).
-
-### PHP Example
-
-Add the following snippet to your theme’s `functions.php` or a custom plugin:
-
-```php
-function call_project_economics_api() {
-    $url = 'https://your-api-domain.com/analytics'; // Replace with your API URL
-    $body = json_encode(array(
-         'location'      => 'USA',
-         'product'       => 'Ethylene',
-         'plant_mode'    => 'Brown',
-         'fund_mode'     => 'Equity',
-         'opex_mode'     => 'Inflated',
-         'carbon_value'  => 'No'
-    ));
-
-    $args = array(
-       'body'      => $body,
-       'headers'   => array('Content-Type' => 'application/json'),
-       'timeout'   => 60,
-    );
-
-    $response = wp_remote_post($url, $args);
-    if (is_wp_error($response)) {
-        return 'Error: ' . $response->get_error_message();
-    } else {
-        return wp_remote_retrieve_body($response);
-    }
-}
-```
-
-You can call this function from your theme template to display API results.
-
-### JavaScript (Fetch API) Example
-
-Ensure CORS is enabled on your API, then add the following script to your WordPress page:
-
-```javascript
-fetch("https://your-api-domain.com/analytics", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-         location: "USA",
-         product: "Ethylene",
-         plant_mode: "Brown",
-         fund_mode: "Equity",
-         opex_mode: "Inflated",
-         carbon_value: "No"
+Example using fetch:
+"""
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    fetch('http://your-api-domain.com/analytics', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            location: 'SAU',
+            product: 'Methanol',
+            plant_mode: 'Green',
+            fund_mode: 'Equity',
+            opex_mode: 'Inflated',
+            carbon_value: 'No'
+        })
     })
-})
-.then(response => response.json())
-.then(data => {
-    console.log(data);
-    // Process and display data on your WordPress page
-})
-.catch(error => console.error("Error:", error));
-```
+    .then(response => response.json())
+    .then(data => {
+        console.log("API response:", data);
+        // Process and display the data as needed on your WordPress site.
+    })
+    .catch(error => console.error("Error:", error));
+});
+</script>"""
 
----
+Note:
 
-## Deploying on Render
+Replace http://your-api-domain.com with the actual domain where your API is hosted.
+Optimizing and Updating the Code
+Junior developers can improve or extend the API by:
 
-[Render](https://render.com) provides an easy way to deploy web services. Follow these steps:
+Refactoring:
+Break the large main.py into separate modules (e.g., models.py, endpoints.py, utils.py) to improve maintainability.
 
-1. **Create a Render Account:**  
-   Sign up at [Render](https://render.com).
+Testing:
+Add unit tests using frameworks such as pytest to cover the functionality of each model function.
 
-2. **Push Your Code to GitHub:**  
-   Ensure your repository contains `main.py`, `requirements.txt`, and your CSV files.
+Documentation:
+Keep inline comments and update the OpenAPI docs by leveraging FastAPI’s automatic documentation features.
 
-3. **Create a New Web Service on Render:**
-   - Log in to your Render dashboard.
-   - Click **New +** and choose **Web Service**.
-   - Connect your GitHub account and select your repository.
-   - Configure the service:
-     - **Name:** Choose a suitable name.
-     - **Environment:** Select `Python`.
-     - **Build Command:**  
-       ```bash
-       pip install -r requirements.txt
-       ```
-     - **Start Command:**  
-       ```bash
-       uvicorn main:app --host 0.0.0.0 --port $PORT
-       ```
-   - Click **Create Web Service**.
+Performance Improvements:
+Profile the functions with large datasets to ensure that the API remains responsive. Consider caching frequently used data (like CSV inputs) or using async functions where appropriate.
 
-4. **Access Your API:**  
-   Once deployed, Render will provide a URL (e.g., `https://your-service.onrender.com`) to use in your WordPress integrations or API tests.
+Configuration Management:
+Use environment variables or configuration files (e.g., with Python’s pydantic.BaseSettings) to manage file paths, host URLs, or other deployment settings.
 
----
+Troubleshooting
+CSV File Paths:
+Ensure that the CSV file paths in the model functions match the file structure on your server.
+
+Dependency Issues:
+If you run into dependency issues, verify your Python version and reinstall packages using pip install -r requirements.txt.
+
+Error Handling:
+Check the error messages returned by the API endpoints for clues. FastAPI’s interactive docs (http://127.0.0.1:8000/docs) can help test endpoints locally.

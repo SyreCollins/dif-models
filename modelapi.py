@@ -17,18 +17,17 @@ app.add_middleware(
 
 class AnalyticsInput(BaseModel):
     location: str
-    product: str
-    plant_effys: str
-    plant_size: str
     plant_mode: str
     fund_mode: str
     opex_mode: str
     carbon_value: str
+
     # ChemProcess parameters:
     operating_prd: int = 27
     util_operating_first: float = 0.70
     util_operating_second: float = 0.80
     util_operating_third: float = 0.95
+
     # MicroEconomic parameters:
     infl: float = 0.02
     RR: float = 0.035
@@ -36,9 +35,6 @@ class AnalyticsInput(BaseModel):
 
     construction_prd: int = 3
     capex_spread: List[float] = [0.2, 0.5, 0.3]
-    #yr1_capex: float = 0.20
-    #yr2_capex: float = 0.50
-    #yr3_capex: float = 0.30
 
     shrDebt_value: float = 0.60
     baseYear: Optional[int] = None
@@ -51,9 +47,21 @@ class AnalyticsInput(BaseModel):
     credit_value: float = 0.10
     CAPEX: Optional[float] = None
     OPEX: Optional[float] = None
-    # MacroEconomic parameters:
+
     PRIcoef: float = 0.3
     CONcoef: float = 0.7
+
+    # ✅ New Advanced Parameters
+    EcNatGas: Optional[float] = None
+    ngCcontent: Optional[float] = None
+    eEFF: Optional[float] = None
+    hEFF: Optional[float] = None
+    Cap: Optional[float] = None
+    Yld: Optional[float] = None
+    feedEcontnt: Optional[float] = None
+    Heat_req: Optional[float] = None
+    Elect_req: Optional[float] = None
+    feedCcontnt: Optional[float] = None
 
     @classmethod
     def validate_capex_spread(cls, v, values):
@@ -68,6 +76,8 @@ class AnalyticsInput(BaseModel):
     def __get_validators__(cls):
         yield cls.validate_capex_spread
 
+
+
 @app.post("/analytics")
 def run_analytics(input: AnalyticsInput):
     try:
@@ -78,16 +88,13 @@ def run_analytics(input: AnalyticsInput):
             multiplier=multipliers,
             project_data=project_datas,
             location=input.location,
-            product=input.product,
-            plant_effys=input.plant_effys,
-            plant_size=input.plant_size,
             plant_mode=input.plant_mode,
             fund_mode=input.fund_mode,
             opex_mode=input.opex_mode,
             carbon_value=input.carbon_value,
             operating_prd=input.operating_prd,
             construction_prd=input.construction_prd,
-            capex_spread=input.capex_spread
+            capex_spread=input.capex_spread,
             infl=input.infl,
             RR=input.RR,
             IRR=input.IRR,
@@ -106,8 +113,21 @@ def run_analytics(input: AnalyticsInput):
             CONcoef=input.CONcoef,
             util_operating_first=input.util_operating_first,
             util_operating_second=input.util_operating_second,
-            util_operating_third=input.util_operating_third
+            util_operating_third=input.util_operating_third,
+
+            # ✅ Add these to the model call
+            EcNatGas=input.EcNatGas,
+            ngCcontent=input.ngCcontent,
+            eEFF=input.eEFF,
+            hEFF=input.hEFF,
+            Cap=input.Cap,
+            Yld=input.Yld,
+            feedEcontnt=input.feedEcontnt,
+            Heat_req=input.Heat_req,
+            Elect_req=input.Elect_req,
+            feedCcontnt=input.feedCcontnt
         )
+
 
         # Alter the specific fields by adding constant values
         result_df["Constant$ Breakeven Price"] = result_df["Constant$ Breakeven Price"] - 2.84
