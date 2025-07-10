@@ -105,7 +105,7 @@ def run_analytics(input: AnalyticsInput):
             util_operating_second=input.util_operating_second,
             util_operating_third=input.util_operating_third,
             EcNatGas=input.EcNatGas,
-            ngCcontent=input.ngCcontnt,
+            ngCcontnt=input.ngCcontnt,
             eEFF=input.eEFF,
             hEFF=input.hEFF,
             Cap=input.Cap,
