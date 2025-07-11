@@ -664,10 +664,50 @@ def MicroEconomic_Model(plant_mode, fund_mode, opex_mode, carbon_value, Cap, Yld
 
 
 ############################################################MACROECONOMIC MODEL BEGINS############################################################################
- # NEW: "C20", "F", "K" passed by user -> sector_code
-def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=2025, ownerCost=0.10, corpTAX_value=0.25, Feed_Price=150.0, Fuel_Price=3.5, Elect_Price=0.12, CarbonTAX_value=50.0, credit_value=0.10, CAPEX=10000000, OPEX=500000, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95, EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85):
+ # NEW: "C20", "F", "K" passed by user -> country
+def MacroEconomic_Model(
+    multiplier,
+    country,
+    plant_mode,
+    fund_mode,
+    opex_mode,
+    carbon_value,
+    construction_prd=3,
+    capex_spread=None,
+    PRIcoef=0.3,
+    CONcoef=0.7,
+    infl=0.02,
+    RR=0.035,
+    IRR=0.10,
+    shrDebt_value=0.60,
+    baseYear=2025,
+    ownerCost=0.10,
+    corpTAX_value=0.25,
+    Feed_Price=150.0,
+    Fuel_Price=3.5,
+    Elect_Price=0.12,
+    CarbonTAX_value=50.0,
+    credit_value=0.10,
+    CAPEX=10000000,
+    OPEX=500000,
+    operating_prd=27,
+    util_operating_first=0.70,
+    util_operating_second=0.80,
+    util_operating_third=0.95,
+    EcNatGas=53.6,
+    ngCcontnt=50.3,
+    hEFF=0.80,
+    eEFF=0.50,
+    Cap=250000,
+    Yld=0.95,
+    feedEcontnt=25.0,
+    Heat_req=3200,
+    Elect_req=600,
+    feedCcontnt=0.85
+):
+    import pandas as pd
 
-    # Generate process outputs
+    # --- PROCESS model ---
     prodQ, _, _, _, _, _, _ = ChemProcess_Model(
         EcNatGas=EcNatGas,
         ngCcontnt=ngCcontnt,
@@ -686,7 +726,7 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
         util_operating_third=util_operating_third
     )
 
-    # Generate economic outputs
+    # --- MICROECONOMIC model ---
     Ps, _, _, _, _, _, Year, project_life, _, Yrly_invsmt, bank_chrg, _, _ = MicroEconomic_Model(
         plant_mode=plant_mode,
         fund_mode=fund_mode,
@@ -724,7 +764,7 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
         feedCcontnt=feedCcontnt
     )
 
-    # Investment allocation
+    # --- Investment allocation ---
     pri_invsmt = [0] * project_life
     con_invsmt = [0] * project_life
     bank_invsmt = [0] * project_life
@@ -738,22 +778,23 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
     con_invsmt = pd.Series(con_invsmt)
     bank_invsmt = pd.Series(bank_invsmt)
 
-    # Fetch multipliers
+    # --- Get multipliers by country only ---
     def get_multiplier(mult_type):
-        entry = multiplier[
+        entries = multiplier[
             (multiplier['Multiplier Type'] == mult_type) &
-            (multiplier['Sector'].str.endswith(sector_code))
+            (multiplier['Country'].str.upper() == country.upper())
         ]
-        if entry.empty:
-            raise ValueError(f"No multiplier found for type {mult_type} and sector {sector_code}")
-        return entry.iloc[0]
+        if entries.empty:
+            raise ValueError(f"No multipliers found for type {mult_type} and country {country}")
+        # Average across all sectors for the country
+        return entries[['Direct Impact', 'Indirect Impact', 'Total Impact']].mean()
 
     gdp_m = get_multiplier("Value-Added Share (USD per million USD output)")
     job_m = get_multiplier("Employment Elasticity (Jobs per million USD output)")
     pay_m = get_multiplier("Compensation (USD per million USD output)")
     tax_m = get_multiplier("Tax Revenue Share (USD per million USD output)")
 
-    ################ GDP Impact
+    # --- Impacts ---
     GDP_dirPRI = gdp_m['Direct Impact'] * pri_invsmt
     GDP_dirCON = gdp_m['Direct Impact'] * con_invsmt
     GDP_dirBAN = gdp_m['Direct Impact'] * bank_invsmt
@@ -770,7 +811,6 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
     GDP_ind = GDP_indPRI + GDP_indCON + GDP_indBAN
     GDP_tot = GDP_totPRI + GDP_totCON + GDP_totBAN
 
-    ################ JOB Impact
     JOB_dirPRI = job_m['Direct Impact'] * pri_invsmt
     JOB_dirCON = job_m['Direct Impact'] * con_invsmt
     JOB_dirBAN = job_m['Direct Impact'] * bank_invsmt
@@ -787,7 +827,6 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
     JOB_ind = JOB_indPRI + JOB_indCON + JOB_indBAN
     JOB_tot = JOB_totPRI + JOB_totCON + JOB_totBAN
 
-    ################ PAY Impact
     PAY_dirPRI = pay_m['Direct Impact'] * pri_invsmt
     PAY_dirCON = pay_m['Direct Impact'] * con_invsmt
     PAY_dirBAN = pay_m['Direct Impact'] * bank_invsmt
@@ -804,7 +843,6 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
     PAY_ind = PAY_indPRI + PAY_indCON + PAY_indBAN
     PAY_tot = PAY_totPRI + PAY_totCON + PAY_totBAN
 
-    ################ TAX Impact
     TAX_dir = [0] * project_life
     TAX_ind = [0] * project_life
     TAX_tot = [0] * project_life
@@ -825,6 +863,7 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
     )
 
 
+
   ####################### Taxation Impacts END ##################
 
 ############################################################# MACROECONOMIC MODEL ENDS ############################################################
@@ -833,7 +872,7 @@ def MacroEconomic_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mo
 
 ############################################################# ANALYTICS MODEL BEGINS ############################################################
 
-def Analytics_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=2025, ownerCost=0.10, corpTAX_value=0.25, Feed_Price=150.0, Fuel_Price=3.5, Elect_Price=0.12, CarbonTAX_value=50.0, credit_value=0.10, CAPEX=10000000, OPEX=500000, PRIcoef=0.3, CONcoef=0.7, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95, EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85):
+def Analytics_Model( multiplier, country, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=2025, ownerCost=0.10, corpTAX_value=0.25, Feed_Price=150.0, Fuel_Price=3.5, Elect_Price=0.12, CarbonTAX_value=50.0, credit_value=0.10, CAPEX=10000000, OPEX=500000, PRIcoef=0.3, CONcoef=0.7, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95, EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85):
 
     tempNUM = 1_000_000
 
@@ -894,7 +933,7 @@ def Analytics_Model( multiplier, sector_code, plant_mode, fund_mode, opex_mode, 
 
     GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI = MacroEconomic_Model(
         multiplier,
-        sector_code=sector_code,
+        country=country,
         plant_mode=plant_mode,
         fund_mode=fund_mode,
         opex_mode=opex_mode,
@@ -1070,13 +1109,13 @@ util_operating_third=0.95"""
 
 #for i in range(len(products)):
   #results = Analytics_Model(multiplier=multipliers, project_data=project_datas, location=locations[2], product=products[i], plant_mode=plant_modes[0], fund_mode=fund_modes[1], opex_mode=opex_modes[0], carbon_value=carbon_values[1])
-"""results = Analytics_Model(
+results = Analytics_Model(
     multiplier=multipliers,
     plant_mode="Brown",
     fund_mode="Mixed",
     opex_mode="Uninflated",
     carbon_value="No",
-    sector_code="CAN_C20",
+    country="CAN",
     Cap=250000,
     Yld=0.95,
     feedEcontnt=25.0,
@@ -1111,5 +1150,5 @@ util_operating_third=0.95"""
     util_operating_third=0.95
 )
 
-print(results)"""
+print(results)
 
