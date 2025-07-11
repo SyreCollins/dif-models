@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 class AnalyticsInput(BaseModel):
-    sector_code: str
+    country: str
 
     plant_mode: str
     fund_mode: str
@@ -77,7 +77,7 @@ def run_analytics(input: AnalyticsInput):
 
         result_df = Analytics_Model(
             multiplier=multipliers,
-            sector_code=input.sector_code,
+            country=input.country,
             plant_mode=input.plant_mode,
             fund_mode=input.fund_mode,
             opex_mode=input.opex_mode,
