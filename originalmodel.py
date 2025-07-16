@@ -5,28 +5,8 @@ import numpy as np
 
 ##################################################################PROCESS MODEL BEGINS##############################################################################
 
-def ChemProcess_Model(
-    EcNatGas=53.6,              # Energy content of natural gas (GJ/t)
-    ngCcontnt=50.3,            # CO2 content of natural gas (kg CO2/GJ)
-    hEFF=0.80,                  # Efficiency of heat source
-    eEFF=0.50,                  # Efficiency of electricity source
-    Cap=250000,                 # Plant capacity (TPA)
-    Yld=0.95,                   # Process yield
-    feedEcontnt=25.0,           # Energy content of feedstock (MJ/kg)
-    Heat_req=3200,              # Heat requirement (MJ/t)
-    Elect_req=600,              # Electricity requirement (kWh/t)
-    feedCcontnt=0.85,           # CO2 content of feedstock (kg CO2/kg)
-    construction_prd=3,
-    operating_prd=27,
-    util_operating_first=0.70,
-    util_operating_second=0.80,
-    util_operating_third=0.95
-):
-    """
-    Computes core process outputs for economic models without dataset dependency.
-    All inputs are now driven directly by payload/user inputs for maximum control.
-    """
-
+def ChemProcess_Model(EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85, construction_prd=3, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95 ):
+    
     project_life = construction_prd + operating_prd
 
     util_fac = np.zeros(project_life)
@@ -665,46 +645,7 @@ def MicroEconomic_Model(plant_mode, fund_mode, opex_mode, carbon_value, Cap, Yld
 
 ############################################################MACROECONOMIC MODEL BEGINS############################################################################
  # NEW: "C20", "F", "K" passed by user -> country
-def MacroEconomic_Model(
-    multiplier,
-    country,
-    plant_mode,
-    fund_mode,
-    opex_mode,
-    carbon_value,
-    construction_prd=3,
-    capex_spread=None,
-    PRIcoef=0.3,
-    CONcoef=0.7,
-    infl=0.02,
-    RR=0.035,
-    IRR=0.10,
-    shrDebt_value=0.60,
-    baseYear=2025,
-    ownerCost=0.10,
-    corpTAX_value=0.25,
-    Feed_Price=150.0,
-    Fuel_Price=3.5,
-    Elect_Price=0.12,
-    CarbonTAX_value=50.0,
-    credit_value=0.10,
-    CAPEX=10000000,
-    OPEX=500000,
-    operating_prd=27,
-    util_operating_first=0.70,
-    util_operating_second=0.80,
-    util_operating_third=0.95,
-    EcNatGas=53.6,
-    ngCcontnt=50.3,
-    hEFF=0.80,
-    eEFF=0.50,
-    Cap=250000,
-    Yld=0.95,
-    feedEcontnt=25.0,
-    Heat_req=3200,
-    Elect_req=600,
-    feedCcontnt=0.85
-):
+def MacroEconomic_Model(multiplier, country, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=2025, ownerCost=0.10, corpTAX_value=0.25, Feed_Price=150.0, Fuel_Price=3.5, Elect_Price=0.12, CarbonTAX_value=50.0, credit_value=0.10, CAPEX=10000000, OPEX=500000, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95, EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85):
     import pandas as pd
 
     # --- PROCESS model ---
@@ -864,6 +805,223 @@ def MacroEconomic_Model(
 
 
 
+  ####################### Taxation Impacts END ##################
+
+def MacroEconomic_Model(multiplier, country, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=2025, ownerCost=0.10, corpTAX_value=0.25, Feed_Price=150.0, Fuel_Price=3.5, Elect_Price=0.12, CarbonTAX_value=50.0, credit_value=0.10, CAPEX=10000000, OPEX=500000, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95, EcNatGas=53.6, ngCcontnt=50.3, hEFF=0.80, eEFF=0.50, Cap=250000, Yld=0.95, feedEcontnt=25.0, Heat_req=3200, Elect_req=600, feedCcontnt=0.85):
+  # This model is based on the multipliers generated in-house using OECD data on national input output tables for various countries
+
+  PRIcoef = PRIcoef #replace with payload value
+  CONcoef = CONcoef #replace with payload value
+
+  # --- PROCESS model ---
+  prodQ, _, _, _, _, _, _ = ChemProcess_Model(
+    EcNatGas=EcNatGas,
+    ngCcontnt=ngCcontnt,
+    hEFF=hEFF,
+    eEFF=eEFF,
+    Cap=Cap,
+    Yld=Yld,
+    feedEcontnt=feedEcontnt,
+    Heat_req=Heat_req,
+    Elect_req=Elect_req,
+    feedCcontnt=feedCcontnt,
+    construction_prd=construction_prd,
+    operating_prd=operating_prd,
+    util_operating_first=util_operating_first,
+    util_operating_second=util_operating_second,
+    util_operating_third=util_operating_third
+  )
+
+  # --- MICROECONOMIC model ---
+  Ps, _, _, _, _, _, Year, project_life, _, Yrly_invsmt, bank_chrg, _, _ = MicroEconomic_Model(
+    plant_mode=plant_mode,
+    fund_mode=fund_mode,
+    opex_mode=opex_mode,
+    carbon_value=carbon_value,
+    EcNatGas=EcNatGas,
+    ngCcontnt=ngCcontnt,
+    hEFF=hEFF,
+    eEFF=eEFF,
+    construction_prd=construction_prd,
+    capex_spread=capex_spread,
+    infl=infl,
+    RR=RR,
+    IRR=IRR,
+    shrDebt_value=shrDebt_value,
+    baseYear=baseYear,
+    ownerCost=ownerCost,
+    corpTAX_value=corpTAX_value,
+    Feed_Price=Feed_Price,
+    Fuel_Price=Fuel_Price,
+    Elect_Price=Elect_Price,
+    CarbonTAX_value=CarbonTAX_value,
+    credit_value=credit_value,
+    CAPEX=CAPEX,
+    OPEX=OPEX,
+    operating_prd=operating_prd,
+    util_operating_first=util_operating_first,
+    util_operating_second=util_operating_second,
+    util_operating_third=util_operating_third,
+    Cap=Cap,
+    Yld=Yld,
+    feedEcontnt=feedEcontnt,
+    Heat_req=Heat_req,
+    Elect_req=Elect_req,
+    feedCcontnt=feedCcontnt
+  )
+  
+  pri_invsmt = [0] * project_life
+  con_invsmt = [0] * project_life
+  bank_invsmt = [0] * project_life
+
+  pri_invsmt[:construction_prd] = [PRIcoef * Yrly_invsmt[i] for i in range(construction_prd)]
+  pri_invsmt[construction_prd:] = [OPEX] * len(pri_invsmt[construction_prd:])  
+  con_invsmt[:construction_prd] = [CONcoef * Yrly_invsmt[i] for i in range(construction_prd)]
+  bank_invsmt = bank_chrg
+
+  
+  output_PRI = multiplier[(multiplier['Country'] == country) &
+                          (multiplier['Multiplier Type'] == "Output Multiplier") &
+                          (multiplier['Sector'] == (country + "_" + "C20"))]
+
+  pay_PRI = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
+
+  job_PRI = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
+
+  tax_PRI = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
+
+  gdp_PRI = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
+
+
+  
+  output_CON = multiplier[(multiplier['Country'] == country) &
+                          (multiplier['Multiplier Type'] == "Output Multiplier") &
+                          (multiplier['Sector'] == (country + "_" + "F"))]
+
+  pay_CON = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "F"))]
+
+  job_CON = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "F"))]
+
+  tax_CON = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "F"))]
+
+  gdp_CON = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "F"))]
+
+
+  
+  output_BAN = multiplier[(multiplier['Country'] == country) &
+                          (multiplier['Multiplier Type'] == "Output Multiplier") &
+                          (multiplier['Sector'] == (country + "_" + "K"))]
+
+  pay_BAN = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "K"))]
+
+  job_BAN = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "K"))]
+
+  tax_BAN = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "K"))]
+
+  gdp_BAN = multiplier[(multiplier['Country'] == country) &
+                       (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
+                       (multiplier['Sector'] == (country + "_" + "K"))]
+
+
+  pri_invsmt = pd.Series(pri_invsmt)
+  con_invsmt = pd.Series(con_invsmt)
+  bank_invsmt = pd.Series(bank_invsmt)
+
+  ####################### GDP Impacts BEGIN #####################
+  GDP_dirPRI = gdp_PRI['Direct Impact'].values[0] * pri_invsmt
+  GDP_dirCON = gdp_CON['Direct Impact'].values[0] * con_invsmt
+  GDP_dirBAN = gdp_BAN['Direct Impact'].values[0] * bank_invsmt
+
+  GDP_indPRI = gdp_PRI['Indirect Impact'].values[0] * pri_invsmt
+  GDP_indCON = gdp_CON['Indirect Impact'].values[0] * con_invsmt
+  GDP_indBAN = gdp_BAN['Indirect Impact'].values[0] * bank_invsmt
+
+  GDP_totPRI = gdp_PRI['Total Impact'].values[0] * pri_invsmt
+  GDP_totCON = gdp_CON['Total Impact'].values[0] * con_invsmt
+  GDP_totBAN = gdp_BAN['Total Impact'].values[0] * bank_invsmt
+
+  GDP_dir = GDP_dirPRI + GDP_dirCON + GDP_dirBAN
+  GDP_ind = GDP_indPRI + GDP_indCON + GDP_indBAN
+  GDP_tot = GDP_totPRI + GDP_totCON + GDP_totBAN
+
+  ####################### GDP Impacts END #######################
+
+
+  ####################### Job Impacts BEGIN #####################
+  JOB_dirPRI = job_PRI['Direct Impact'].values[0] * pri_invsmt
+  JOB_dirCON = job_CON['Direct Impact'].values[0] * con_invsmt
+  JOB_dirBAN = job_BAN['Direct Impact'].values[0] * bank_invsmt
+
+  JOB_indPRI = job_PRI['Indirect Impact'].values[0] * pri_invsmt
+  JOB_indCON = job_CON['Indirect Impact'].values[0] * con_invsmt
+  JOB_indBAN = job_BAN['Indirect Impact'].values[0] * bank_invsmt
+
+  JOB_totPRI = job_PRI['Total Impact'].values[0] * pri_invsmt
+  JOB_totCON = job_CON['Total Impact'].values[0] * con_invsmt
+  JOB_totBAN = job_BAN['Total Impact'].values[0] * bank_invsmt
+
+  JOB_dir = JOB_dirPRI + JOB_dirCON + JOB_dirBAN
+  JOB_ind = JOB_indPRI + JOB_indCON + JOB_indBAN
+  JOB_tot = JOB_totPRI + JOB_totCON + JOB_totBAN
+
+  ####################### Job Impacts END #######################
+
+
+  ####################### Wages & Salaries Impacts BEGIN #####################
+  PAY_dirPRI = pay_PRI['Direct Impact'].values[0] * pri_invsmt
+  PAY_dirCON = pay_CON['Direct Impact'].values[0] * con_invsmt
+  PAY_dirBAN = pay_BAN['Direct Impact'].values[0] * bank_invsmt
+
+  PAY_indPRI = pay_PRI['Indirect Impact'].values[0] * pri_invsmt
+  PAY_indCON = pay_CON['Indirect Impact'].values[0] * con_invsmt
+  PAY_indBAN = pay_BAN['Indirect Impact'].values[0] * bank_invsmt
+
+  PAY_totPRI = pay_PRI['Total Impact'].values[0] * pri_invsmt
+  PAY_totCON = pay_CON['Total Impact'].values[0] * con_invsmt
+  PAY_totBAN = pay_BAN['Total Impact'].values[0] * bank_invsmt
+
+  PAY_dir = PAY_dirPRI + PAY_dirCON + PAY_dirBAN
+  PAY_ind = PAY_indPRI + PAY_indCON + PAY_indBAN
+  PAY_tot = PAY_totPRI + PAY_totCON + PAY_totBAN
+
+  ####################### Wages & Salaries Impacts END #######################
+
+
+  ####################### Taxation Impacts (Potential Tax Revenues) BEGIN ################
+  
+  TAX_dir = [0] * project_life
+  TAX_ind = [0] * project_life
+  TAX_tot = [0] * project_life
+
+  for i in range(construction_prd, project_life):
+      TAX_dir[i] = tax_PRI['Direct Impact'].values[0] * np.array(Yrly_invsmt[i] + (Ps * prodQ[i]))
+      TAX_ind[i] = tax_PRI['Indirect Impact'].values[0] * np.array(Yrly_invsmt[i] + (Ps * prodQ[i]))
+      TAX_tot[i] = tax_PRI['Total Impact'].values[0] * np.array(Yrly_invsmt[i] + (Ps * prodQ[i]))
+
+
+  return GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI
   ####################### Taxation Impacts END ##################
 
 ############################################################# MACROECONOMIC MODEL ENDS ############################################################
@@ -1115,7 +1273,7 @@ results = Analytics_Model(
     fund_mode="Mixed",
     opex_mode="Uninflated",
     carbon_value="No",
-    country="CAN",
+    country="USA",
     Cap=250000,
     Yld=0.95,
     feedEcontnt=25.0,
@@ -1150,5 +1308,5 @@ results = Analytics_Model(
     util_operating_third=0.95
 )
 
-print(results)
+#print(results)
 
