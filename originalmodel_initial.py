@@ -688,7 +688,7 @@ def MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value, co
 
 ############################################################MACROECONOMIC MODEL BEGINS############################################################################
 
-def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10,CAPEX=None, OPEX=None, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80,util_operating_third=0.95):
+def MacroEconomic_Model(multiplier, data, country, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, PRIcoef=0.3, CONcoef=0.7, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10,CAPEX=None, OPEX=None, operating_prd=27, util_operating_first=0.70, util_operating_second=0.80,util_operating_third=0.95):
   # This model is based on the multipliers generated in-house using OECD data on national input output tables for various countries
 
   PRIcoef = PRIcoef #replace with payload value
@@ -707,69 +707,69 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
   bank_invsmt = bank_chrg
 
   
-  output_PRI = multiplier[(multiplier['Country'] == location) &
+  output_PRI = multiplier[(multiplier['Country'] == country) &
                           (multiplier['Multiplier Type'] == "Output Multiplier") &
-                          (multiplier['Sector'] == (location + "_" + "C20"))]
+                          (multiplier['Sector'] == (country + "_" + "C20"))]
 
-  pay_PRI = multiplier[(multiplier['Country'] == location) &
+  pay_PRI = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "C20"))]
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
 
-  job_PRI = multiplier[(multiplier['Country'] == location) &
+  job_PRI = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "C20"))]
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
 
-  tax_PRI = multiplier[(multiplier['Country'] == location) &
+  tax_PRI = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "C20"))]
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
 
-  gdp_PRI = multiplier[(multiplier['Country'] == location) &
+  gdp_PRI = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "C20"))]
+                       (multiplier['Sector'] == (country + "_" + "C20"))]
 
 
   
-  output_CON = multiplier[(multiplier['Country'] == location) &
+  output_CON = multiplier[(multiplier['Country'] == country) &
                           (multiplier['Multiplier Type'] == "Output Multiplier") &
-                          (multiplier['Sector'] == (location + "_" + "F"))]
+                          (multiplier['Sector'] == (country + "_" + "F"))]
 
-  pay_CON = multiplier[(multiplier['Country'] == location) &
+  pay_CON = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "F"))]
+                       (multiplier['Sector'] == (country + "_" + "F"))]
 
-  job_CON = multiplier[(multiplier['Country'] == location) &
+  job_CON = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "F"))]
+                       (multiplier['Sector'] == (country + "_" + "F"))]
 
-  tax_CON = multiplier[(multiplier['Country'] == location) &
+  tax_CON = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "F"))]
+                       (multiplier['Sector'] == (country + "_" + "F"))]
 
-  gdp_CON = multiplier[(multiplier['Country'] == location) &
+  gdp_CON = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "F"))]
+                       (multiplier['Sector'] == (country + "_" + "F"))]
 
 
   
-  output_BAN = multiplier[(multiplier['Country'] == location) &
+  output_BAN = multiplier[(multiplier['Country'] == country) &
                           (multiplier['Multiplier Type'] == "Output Multiplier") &
-                          (multiplier['Sector'] == (location + "_" + "K"))]
+                          (multiplier['Sector'] == (country + "_" + "K"))]
 
-  pay_BAN = multiplier[(multiplier['Country'] == location) &
+  pay_BAN = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Compensation (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "K"))]
+                       (multiplier['Sector'] == (country + "_" + "K"))]
 
-  job_BAN = multiplier[(multiplier['Country'] == location) &
+  job_BAN = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Employment Elasticity (Jobs per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "K"))]
+                       (multiplier['Sector'] == (country + "_" + "K"))]
 
-  tax_BAN = multiplier[(multiplier['Country'] == location) &
+  tax_BAN = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Tax Revenue Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "K"))]
+                       (multiplier['Sector'] == (country + "_" + "K"))]
 
-  gdp_BAN = multiplier[(multiplier['Country'] == location) &
+  gdp_BAN = multiplier[(multiplier['Country'] == country) &
                        (multiplier['Multiplier Type'] == "Value-Added Share (USD per million USD output)") &
-                       (multiplier['Sector'] == (location + "_" + "K"))]
+                       (multiplier['Sector'] == (country + "_" + "K"))]
 
 
   pri_invsmt = pd.Series(pri_invsmt)
@@ -857,10 +857,10 @@ def MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_
 
 ############################################################# ANALYTICS MODEL BEGINS ############################################################
 
-def Analytics_Model(multiplier, project_data, location, product, plant_effys, plant_size, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10, CAPEX=None, OPEX=None,PRIcoef=0.3, CONcoef=0.7,util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95):
+def Analytics_Model(multiplier, project_data, country, product, plant_effys, plant_size, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=3, capex_spread=None, operating_prd=27, infl=0.02, RR=0.035, IRR=0.10, shrDebt_value=0.60, baseYear=None, ownerCost=0.10, corpTAX_value=None, Feed_Price=None, Fuel_Price=None, Elect_Price=None, CarbonTAX_value=None, credit_value=0.10, CAPEX=None, OPEX=None,PRIcoef=0.3, CONcoef=0.7,util_operating_first=0.70, util_operating_second=0.80, util_operating_third=0.95):
 
 
-  dt = project_data[(project_data['Country'] == location) & (project_data['Main_Prod'] == product) & (project_data['Plant_Effy'] == plant_effys) & (project_data['Plant_Size'] == plant_size)]
+  dt = project_data[(project_data['Country'] == country) & (project_data['Main_Prod'] == product) & (project_data['Plant_Effy'] == plant_effys) & (project_data['Plant_Size'] == plant_size)]
 
 
   Infl = 0.02  # inflation factor
@@ -872,7 +872,7 @@ def Analytics_Model(multiplier, project_data, location, product, plant_effys, pl
     prodQ, feedQ, Rheat, netHeat, Relec, ghg_dir, ghg_ind = ChemProcess_Model(data, construction_prd=construction_prd, operating_prd=operating_prd, util_operating_first=util_operating_first,util_operating_second=util_operating_second,util_operating_third=util_operating_third) #specify process_model, construction_prd, operating_prd
     Ps, Pso, Pc, Pco, cshflw, cshflw2, Year, project_life, construction_prd, Yrly_invsmt, bank_chrg, NetRevn, tax_pybl = MicroEconomic_Model(data, plant_mode, fund_mode, opex_mode, carbon_value, construction_prd=construction_prd, capex_spread=capex_spread, infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear,ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price,Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value,credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd,util_operating_first=util_operating_first, util_operating_second=util_operating_second,util_operating_third=util_operating_third)
 
-    GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI = MacroEconomic_Model(multiplier, data, location, plant_mode, fund_mode, opex_mode, carbon_value,construction_prd=construction_prd, capex_spread=capex_spread, PRIcoef=PRIcoef, CONcoef=CONcoef,infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear,ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price,Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value,credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd,util_operating_first=util_operating_first, util_operating_second=util_operating_second,util_operating_third=util_operating_third)
+    GDP_dir, GDP_ind, GDP_tot, JOB_dir, JOB_ind, JOB_tot, PAY_dir, PAY_ind, PAY_tot, TAX_dir, TAX_ind, TAX_tot, GDP_totPRI, JOB_totPRI, PAY_totPRI, GDP_dirPRI, JOB_dirPRI, PAY_dirPRI = MacroEconomic_Model(multiplier, data, country, plant_mode, fund_mode, opex_mode, carbon_value,construction_prd=construction_prd, capex_spread=capex_spread, PRIcoef=PRIcoef, CONcoef=CONcoef,infl=infl, RR=RR, IRR=IRR, shrDebt_value=shrDebt_value, baseYear=baseYear,ownerCost=ownerCost, corpTAX_value=corpTAX_value, Feed_Price=Feed_Price,Fuel_Price=Fuel_Price, Elect_Price=Elect_Price, CarbonTAX_value=CarbonTAX_value,credit_value=credit_value, CAPEX=CAPEX, OPEX=OPEX, operating_prd=operating_prd,util_operating_first=util_operating_first, util_operating_second=util_operating_second,util_operating_third=util_operating_third)
 
     Yrly_cost = np.array(Yrly_invsmt) + np.array(bank_chrg)
 
